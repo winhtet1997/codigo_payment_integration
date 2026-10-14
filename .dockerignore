@@ -1,0 +1,8 @@
+**/bin
+**/obj
+**/.git
+frontend/node_modules
+frontend/.next
+tests
+**/*.md
+.env

@@ -1,0 +1,27 @@
+# Secrets. The merchant secret key must never be committed.
+src/PaymentIntegration.Api/appsettings.Development.json
+src/PaymentIntegration.Api/appsettings.*.local.json
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+coverage/
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/

@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: payment
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: Server=mysql;Port=3306;Database=payment;User=root;Password=root;
+      ConnectionStrings__Redis: redis:6379
+      TwoC2P__MerchantId: ${TWOC2P_MERCHANT_ID:-}
+      TwoC2P__SecretKey: ${TWOC2P_SECRET_KEY:-}
+      TwoC2P__PaymentTokenUrl: https://sandbox-pgw.2c2p.com/payment/4.3/paymentToken
+      TwoC2P__DoPaymentUrl: https://sandbox-pgw.2c2p.com/payment/4.3/payment
+      TwoC2P__InquiryUrl: https://sandbox-pgw.2c2p.com/payment/4.3/paymentInquiry
+      App__FrontendBaseUrl: http://localhost:3000
+      App__PublicApiBaseUrl: ${PUBLIC_API_BASE_URL:-http://localhost:8080}
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+
+volumes:
+  mysql-data:
